@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高考季数据漏斗</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#f5f5f5;font-family:system-ui,-apple-system,sans-serif;padding:30px 20px;color:#333}
+  .fw{max-width:900px;margin:0 auto}
+  .ft{text-align:center;font-size:22px;font-weight:700;margin-bottom:24px;letter-spacing:2px}
+  .sec{margin:0 auto;border-radius:10px;overflow:visible}
+  .sh{text-align:center;font-size:14px;font-weight:700;color:#fff;padding:10px 0;letter-spacing:2px;border-radius:10px 10px 0 0}
+  .sb{padding:12px 24px 16px}
+  .r{display:flex;align-items:center;justify-content:center;margin:6px 0;gap:10px}
+  .bx{flex:1;max-width:440px;text-align:center;padding:10px 16px;border-radius:6px;font-size:15px;font-weight:600;border:1.5px solid #ddd;background:#fff}
+  .ds{flex-shrink:0;display:flex;align-items:center;gap:0}
+  .da{font-size:16px;color:#999;margin-right:6px}
+  .db{display:flex;flex-direction:column;gap:3px;padding:8px 12px;border-radius:6px;border:1.5px dashed}
+  .di{font-size:12px;font-weight:500;padding:3px 8px;border-radius:3px;white-space:nowrap}
+  .cols{display:flex;gap:16px;margin-bottom:10px}
+  .col{flex:1;text-align:center}
+  .col-title{font-size:12px;font-weight:700;padding:5px 10px;border-radius:4px;margin-bottom:8px;color:#fff;display:inline-block}
+  .col .bx{max-width:100%;font-size:14px;padding:8px 12px;margin:5px 0}
+  .w1{width:100%}.w2{width:90%}.w3{width:78%}.w4{width:64%}
+  .c1{background:rgba(67,160,71,0.10);border:2px solid rgba(67,160,71,0.4)}
+  .c1 .sh{background:#43A047}
+  .c1 .bx{border-color:rgba(67,160,71,0.35);background:rgba(67,160,71,0.06)}
+  .c1 .col-title{background:#43A047}
+  .c2{background:rgba(239,108,0,0.10);border:2px solid rgba(239,108,0,0.4)}
+  .c2 .sh{background:#EF6C00}
+  .c2 .bx{border-color:rgba(239,108,0,0.35);background:rgba(239,108,0,0.06)}
+  .c2 .hl{background:rgba(239,108,0,0.18);color:#e65100;border-color:rgba(239,108,0,0.45)}
+  .c2 .db{border-color:rgba(239,108,0,0.4);background:rgba(239,108,0,0.05)}
+  .c2 .di{color:#e65100}
+  .c3{background:rgba(216,67,21,0.10);border:2px solid rgba(216,67,21,0.4)}
+  .c3 .sh{background:#D84315}
+  .c3 .bx{border-color:rgba(216,67,21,0.35);background:rgba(216,67,21,0.06)}
+  .c3 .hl{background:rgba(216,67,21,0.18);color:#bf360c;border-color:rgba(216,67,21,0.45)}
+  .c3 .db{border-color:rgba(216,67,21,0.4);background:rgba(216,67,21,0.05)}
+  .c3 .di{color:#bf360c}
+  .c4{background:rgba(183,28,28,0.10);border:2px solid rgba(183,28,28,0.4)}
+  .c4 .sh{background:#B71C1C}
+  .c4 .bx{border-color:rgba(183,28,28,0.35);background:rgba(183,28,28,0.06)}
+  .ar{text-align:center;margin:4px 0}
+  .ar svg{width:20px;height:20px}
+  .result{background:rgba(100,100,100,0.08);border:2px solid #ccc;border-radius:10px}
+  .result .sh{background:#616161}
+  .result .bx{font-size:16px;font-weight:700;border-color:#bbb;background:#f9f9f9}
+  .date-selector{position:fixed;top:16px;right:20px;z-index:100;display:flex;gap:6px;align-items:center;background:#fff;padding:6px 12px;border-radius:8px;border:1.5px solid #ddd}
+  .date-selector label{font-size:13px;font-weight:600;color:#555}
+  .date-selector select{font-size:14px;padding:4px 8px;border-radius:5px;border:1.5px solid #ccc;background:#fff;cursor:pointer;font-weight:600}
+  .page{display:none}
+  .page.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="date-selector">
+  <label>日期：</label>
+  <select id="dateSelect" onchange="switchDate(this.value)">
+    <option value="0610">6月10日</option>
+    <option value="0611">6月11日</option>
+    <option value="0612">6月12日</option>
+    <option value="0613">6月13日</option>
+    <option value="0614">6月14日</option>
+  </select>
+</div>
+
+<!-- ========== 6月10日 ========== -->
+<div class="page" id="page-0610">
+<div class="fw">
+  <div class="ft">6月10日数据漏斗</div>
+
+  <div class="sec w1 c1">
+    <div class="sh">漏斗层1 · 入口</div>
+    <div class="sb">
+      <div class="cols">
+        <div class="col">
+          <div class="col-title">端内-PC</div>
+          <div class="bx">轮播banner点击人数 · 4,612</div>
+          <div class="bx">tab点击人数 · 4,177</div>
+          <div class="bx">广告banner点击人数 · 887</div>
+          <div class="bx">落地页uv · 9,676</div>
+          <div class="bx">扫码人数 · 1,740</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端内-移动（IOS/安卓）</div>
+          <div class="bx">主机tab点击人数 · 24,844（安卓16,421 / iOS8,423）</div>
+          <div class="bx">banner点击人数 · 3,728</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端外-推广</div>
+          <div class="bx">推广大致人数 · 2,441</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w2 c2">
+    <div class="sh">漏斗层2 · 活动页认证</div>
+    <div class="sb">
+      <div class="r"><div class="bx">活动页uv · 5,672</div></div>
+      <div class="r"><div class="bx">出现弹窗uv · 5,254</div></div>
+      <div class="r"><div class="bx">发起认证uv · 2,505</div></div>
+      <div class="r"><div class="bx">年龄原因被拦截uv</div></div>
+      <div class="r"><div class="bx">手机号原因被拦截uv</div></div>
+      <div class="r"><div class="bx">认证通过人数 · 750</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w3 c3">
+    <div class="sh">漏斗层3 · 裂变</div>
+    <div class="sb">
+      <div class="r"><div class="bx">发起邀请人数 · 387</div></div>
+      <div class="r"><div class="bx">被邀请人认证人数 · 387</div></div>
+      <div class="r">
+        <div class="bx hl">被邀请人认证成功人数</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1.1 因为不是高考生原因在认证被拦截人数</span>
+            <span class="di">1.2 看在认证中每一步的拦截人数</span>
+            <span class="di">2. 因为不是新用户被拦截人数</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">被邀请人二次发起人数</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 c4">
+    <div class="sh">漏斗层4 · 转化PC</div>
+    <div class="sb">
+      <div class="r"><div class="bx">PC奖励激活人数</div></div>
+      <div class="r"><div class="bx">邀请者激活人数</div></div>
+      <div class="r"><div class="bx">裂变新用户激活人数</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 result">
+    <div class="sh">结果层</div>
+    <div class="sb">
+      <div class="r"><div class="bx">激活的PC新用户总量</div></div>
+      <div class="r"><div class="bx">激活的biubiu未注册新用户总量</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ========== 6月11日 ========== -->
+<div class="page" id="page-0611">
+<div class="fw">
+  <div class="ft">6月11日数据漏斗</div>
+
+  <div class="sec w1 c1">
+    <div class="sh">漏斗层1 · 入口</div>
+    <div class="sb">
+      <div class="cols">
+        <div class="col">
+          <div class="col-title">端内-PC</div>
+          <div class="bx">轮播banner点击人数 · 3,818</div>
+          <div class="bx">tab点击人数 · 3,976</div>
+          <div class="bx">广告banner点击人数 · 606</div>
+          <div class="bx">落地页uv · 8,400</div>
+          <div class="bx">扫码人数 · 1,711</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端内-移动（IOS/安卓）</div>
+          <div class="bx">主机tab点击人数 · 22,283（安卓14,749 / iOS7,534）</div>
+          <div class="bx">banner点击人数 · 2,882</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端外-推广</div>
+          <div class="bx">推广大致人数 · 426</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w2 c2">
+    <div class="sh">漏斗层2 · 活动页认证</div>
+    <div class="sb">
+      <div class="r"><div class="bx">活动页uv · 3,290</div></div>
+      <div class="r"><div class="bx">出现弹窗uv · 3,024</div></div>
+      <div class="r"><div class="bx">发起认证uv · 2,387</div></div>
+      <div class="r"><div class="bx">年龄原因被拦截uv</div></div>
+      <div class="r">
+        <div class="bx hl">拟人步骤未通过进入到二要素uv</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1. 不通过加速时长占比/PC时长占比</span>
+            <span class="di">2. 不通过注册时间占比</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">手机号原因被拦截uv</div></div>
+      <div class="r"><div class="bx">认证通过人数 · 816</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w3 c3">
+    <div class="sh">漏斗层3 · 裂变</div>
+    <div class="sb">
+      <div class="r"><div class="bx">发起邀请人数 · 331</div></div>
+      <div class="r"><div class="bx">被邀请人认证人数 · 380</div></div>
+      <div class="r">
+        <div class="bx hl">被邀请人认证成功人数</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1.1 因为不是高考生原因在认证被拦截人数</span>
+            <span class="di">1.2 看在认证中每一步的拦截人数</span>
+            <span class="di">2. 因为不是新用户被拦截人数</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">被邀请人二次发起人数 · 28</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 c4">
+    <div class="sh">漏斗层4 · 转化PC</div>
+    <div class="sb">
+      <div class="r"><div class="bx">PC奖励激活人数</div></div>
+      <div class="r"><div class="bx">邀请者激活人数</div></div>
+      <div class="r"><div class="bx">裂变新用户激活人数</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 result">
+    <div class="sh">结果层</div>
+    <div class="sb">
+      <div class="r"><div class="bx">激活的PC新用户总量</div></div>
+      <div class="r"><div class="bx">激活的biubiu未注册新用户总量</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ========== 6月12日 ========== -->
+<div class="page" id="page-0612">
+<div class="fw">
+  <div class="ft">6月12日数据漏斗</div>
+
+  <div class="sec w1 c1">
+    <div class="sh">漏斗层1 · 入口</div>
+    <div class="sb">
+      <div class="cols">
+        <div class="col">
+          <div class="col-title">端内-PC</div>
+          <div class="bx">轮播banner点击人数 · 4,093</div>
+          <div class="bx">tab点击人数 · 4,967</div>
+          <div class="bx">广告banner点击人数 · 544</div>
+          <div class="bx">落地页uv · 9,604</div>
+          <div class="bx">扫码人数 · 1,846</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端内-移动（IOS/安卓）</div>
+          <div class="bx">主机tab点击人数 · 34,600（安卓17,996 / iOS16,604）</div>
+          <div class="bx">banner点击人数 · 3,153</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端外-推广</div>
+          <div class="bx">推广大致人数 · 388</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w2 c2">
+    <div class="sh">漏斗层2 · 活动页认证</div>
+    <div class="sb">
+      <div class="r"><div class="bx">活动页uv · 3,495</div></div>
+      <div class="r"><div class="bx">出现弹窗uv · 3,158</div></div>
+      <div class="r"><div class="bx">发起认证uv · 2,400</div></div>
+      <div class="r"><div class="bx">年龄原因被拦截uv</div></div>
+      <div class="r">
+        <div class="bx hl">拟人步骤未通过进入到二要素uv</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1. 不通过加速时长占比/PC时长占比</span>
+            <span class="di">2. 不通过注册时间占比</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">手机号原因被拦截uv</div></div>
+      <div class="r"><div class="bx">认证通过人数 · 1,044</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w3 c3">
+    <div class="sh">漏斗层3 · 裂变</div>
+    <div class="sb">
+      <div class="r"><div class="bx">发起邀请人数 · 500</div></div>
+      <div class="r"><div class="bx">被邀请人认证人数 · 603</div></div>
+      <div class="r">
+        <div class="bx hl">被邀请人认证成功人数</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1.1 因为不是高考生原因在认证被拦截人数</span>
+            <span class="di">1.2 看在认证中每一步的拦截人数</span>
+            <span class="di">2. 因为不是新用户被拦截人数</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">被邀请人二次发起人数 · 44</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 c4">
+    <div class="sh">漏斗层4 · 转化PC</div>
+    <div class="sb">
+      <div class="r"><div class="bx">PC奖励激活人数</div></div>
+      <div class="r"><div class="bx">邀请者激活人数</div></div>
+      <div class="r"><div class="bx">裂变新用户激活人数</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 result">
+    <div class="sh">结果层</div>
+    <div class="sb">
+      <div class="r"><div class="bx">激活的PC新用户总量</div></div>
+      <div class="r"><div class="bx">激活的biubiu未注册新用户总量</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ========== 6月13日 ========== -->
+<div class="page" id="page-0613">
+<div class="fw">
+  <div class="ft">6月13日数据漏斗</div>
+
+  <div class="sec w1 c1">
+    <div class="sh">漏斗层1 · 入口</div>
+    <div class="sb">
+      <div class="cols">
+        <div class="col">
+          <div class="col-title">端内-PC</div>
+          <div class="bx">轮播banner点击人数 · 4,155</div>
+          <div class="bx">tab点击人数 · 5,021</div>
+          <div class="bx">广告banner点击人数 · 746</div>
+          <div class="bx">落地页uv · 9,922</div>
+          <div class="bx">扫码人数 · 1,748</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端内-移动（IOS/安卓）</div>
+          <div class="bx">主机tab点击人数 · 49,986（安卓25,831 / iOS24,155）</div>
+          <div class="bx">banner点击人数 · 3,703</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端外-推广</div>
+          <div class="bx">推广大致人数 · 132</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w2 c2">
+    <div class="sh">漏斗层2 · 活动页认证</div>
+    <div class="sb">
+      <div class="r"><div class="bx">活动页uv · 3,361</div></div>
+      <div class="r"><div class="bx">出现弹窗uv · 3,010</div></div>
+      <div class="r"><div class="bx">发起认证uv · 2,289</div></div>
+      <div class="r"><div class="bx">年龄原因被拦截uv</div></div>
+      <div class="r">
+        <div class="bx hl">拟人步骤未通过进入到二要素uv</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1. 不通过加速时长占比/PC时长占比</span>
+            <span class="di">2. 不通过注册时间占比</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">手机号原因被拦截uv</div></div>
+      <div class="r"><div class="bx">认证通过人数 · 929</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w3 c3">
+    <div class="sh">漏斗层3 · 裂变</div>
+    <div class="sb">
+      <div class="r"><div class="bx">发起邀请人数 · 439</div></div>
+      <div class="r"><div class="bx">被邀请人认证人数 · 464</div></div>
+      <div class="r">
+        <div class="bx hl">被邀请人认证成功人数</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1.1 因为不是高考生原因在认证被拦截人数</span>
+            <span class="di">1.2 看在认证中每一步的拦截人数</span>
+            <span class="di">2. 因为不是新用户被拦截人数</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">被邀请人二次发起人数 · 27</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 c4">
+    <div class="sh">漏斗层4 · 转化PC</div>
+    <div class="sb">
+      <div class="r"><div class="bx">PC奖励激活人数</div></div>
+      <div class="r"><div class="bx">邀请者激活人数</div></div>
+      <div class="r"><div class="bx">裂变新用户激活人数</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 result">
+    <div class="sh">结果层</div>
+    <div class="sb">
+      <div class="r"><div class="bx">激活的PC新用户总量</div></div>
+      <div class="r"><div class="bx">激活的biubiu未注册新用户总量</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ========== 6月14日 ========== -->
+<div class="page" id="page-0614">
+<div class="fw">
+  <div class="ft">6月14日数据漏斗</div>
+
+  <div class="sec w1 c1">
+    <div class="sh">漏斗层1 · 入口</div>
+    <div class="sb">
+      <div class="cols">
+        <div class="col">
+          <div class="col-title">端内-PC</div>
+          <div class="bx">轮播banner点击人数 · 3,628</div>
+          <div class="bx">tab点击人数 · 4,474</div>
+          <div class="bx">广告banner点击人数 · 629</div>
+          <div class="bx">落地页uv · 8,731</div>
+          <div class="bx">扫码人数 · 1,804</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端内-移动（IOS/安卓）</div>
+          <div class="bx">主机tab点击人数 · 40,752（安卓21,351 / iOS19,401）</div>
+          <div class="bx">banner点击人数 · 2,813</div>
+        </div>
+        <div class="col">
+          <div class="col-title">端外-推广</div>
+          <div class="bx">推广大致人数 · 222</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w2 c2">
+    <div class="sh">漏斗层2 · 活动页认证</div>
+    <div class="sb">
+      <div class="r"><div class="bx">活动页uv · 3,151</div></div>
+      <div class="r"><div class="bx">出现弹窗uv · 2,834</div></div>
+      <div class="r"><div class="bx">发起认证uv · 2,229</div></div>
+      <div class="r"><div class="bx">年龄原因被拦截uv</div></div>
+      <div class="r">
+        <div class="bx hl">拟人步骤未通过进入到二要素uv</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">1. 不通过加速时长占比/PC时长占比</span>
+            <span class="di">2. 不通过注册时间占比</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">手机号原因被拦截uv</div></div>
+      <div class="r"><div class="bx">认证通过人数 · 914</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w3 c3">
+    <div class="sh">漏斗层3 · 裂变</div>
+    <div class="sb">
+      <div class="r"><div class="bx">发起邀请人数 · 389</div></div>
+      <div class="r"><div class="bx">被邀请人认证人数 · 443</div></div>
+      <div class="r">
+        <div class="bx hl">被邀请人认证成功人数</div>
+        <div class="ds"><span class="da">→</span>
+          <div class="db">
+            <span class="di">邀请页-年龄不符拦截 · 6</span>
+            <span class="di">邀请页-手机号身份证不一致拦截 · 94</span>
+            <span class="di">邀请页-非新用户受邀失败 · 167</span>
+          </div>
+        </div>
+      </div>
+      <div class="r"><div class="bx">被邀请人二次发起人数 · 40</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 c4">
+    <div class="sh">漏斗层4 · 转化PC</div>
+    <div class="sb">
+      <div class="r"><div class="bx">PC奖励激活人数</div></div>
+      <div class="r"><div class="bx">邀请者激活人数</div></div>
+      <div class="r"><div class="bx">裂变新用户激活人数</div></div>
+    </div>
+  </div>
+
+  <div class="ar"><svg viewBox="0 0 20 20"><path d="M10 2L10 18M6 14L10 18L14 14" stroke="#999" stroke-width="2" fill="none"/></svg></div>
+
+  <div class="sec w4 result">
+    <div class="sh">结果层</div>
+    <div class="sb">
+      <div class="r"><div class="bx">激活的PC新用户总量</div></div>
+      <div class="r"><div class="bx">激活的biubiu未注册新用户总量</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function switchDate(date) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('page-' + date).classList.add('active');
+}
+// 默认显示6月10日
+switchDate('0610');
+</script>
+</body>
+</html>
