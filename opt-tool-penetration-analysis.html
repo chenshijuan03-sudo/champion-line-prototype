@@ -320,38 +320,7 @@
                     <li>外置入口日均 276 UV，约为内置入口的 15.7%，说明外置覆盖到的用户群<strong>远小于</strong>通过设置页内置路径触达的用户</li>
                     <li>但外置入口的核心价值在于<strong>缩短路径</strong>：内置需要 3 步（设置→优化工具→网络工具），外置仅需 1 步，对有明确修复需求的用户体验提升显著</li>
                     <li>外置入口还额外覆盖了部分<strong>不会主动进入设置页</strong>的用户——这些用户原本无法触达网络工具功能</li>
-                    <li>不过外置入口也有代价：63% 的用户处于加速状态被拦截，仅 37% 能最终完成修复，<strong>漏斗损耗较大</strong></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- 外置优化空间 -->
-    <div class="card opt-card critical">
-        <div class="opt-header">
-            <div class="opt-title">外置功能优化空间：提升外置入口的有效触达率</div>
-            <span class="opt-tag critical">P0 · 策略优化</span>
-        </div>
-        <div class="opt-body">
-            <div class="opt-data">
-                <h5>外置入口漏斗损耗（6/16）</h5>
-                <div class="opt-metric"><span class="big">276</span><span class="label">点击工具</span></div>
-                <div class="opt-metric"><span class="big amber">208</span><span class="label">到达工具弹窗（75.4%）</span></div>
-                <div class="opt-metric"><span class="big amber">178</span><span class="label">启动修复（85.6%）</span></div>
-                <div class="opt-metric"><span class="big red">103</span><span class="label">最终重启生效（57.9%）</span></div>
-                <div class="spacer"></div>
-                <div style="font-size:12px;color:#64748b;line-height:1.6;">
-                    点击工具 → 最终重启生效的端到端转化率仅 <strong>37.3%</strong><br>
-                    即每 100 人点击外置入口，仅 37 人真正完成修复并重启生效
-                </div>
-            </div>
-            <div class="opt-insight">
-                <h5>优化空间分析</h5>
-                <ul>
-                    <li><strong>流量侧：</strong>外置入口 276 UV 仅为内置的 15.7%，提升空间大。可通过更多场景触发（如加速异常时主动推荐、网络检测失败时引导）扩大外置入口曝光</li>
-                    <li><strong>转化侧：</strong>端到端仅 37.3%，主要损耗在加速拦截（24.6%流失）和完成页不重启（42.1%流失）。优化这两处可将端到端转化率从 37% 提升至 50%+</li>
-                    <li><strong>内外联动：</strong>可考虑在外置入口未触达的用户（如加速拦截放弃的 68 人）中，引导其通过设置页内置路径使用，形成互补</li>
-                    <li><strong>场景化触发：</strong>当用户遇到网络问题时主动弹出外置入口（而非等用户自己找到），预计可显著提升外置入口UV</li>
+                    <li>外置入口UV偏低的核心原因可能是：<strong>用户仍习惯通过旧的设置页路径使用网络工具</strong>，并不知晓一键修复工具已能承载同样的修复功能。因此可在原网络工具页面增加引导，让用户了解可以直接通过一键修复工具进行修复，从而缩短用户路径、提升体验</li>
                 </ul>
             </div>
         </div>
@@ -364,8 +333,8 @@
             将"网络工具"和"商店优化"合并为"优化工具"Tab 是一次<strong style="color:#16a34a">成功的入口整合</strong>，
             合并后渗透率 70% 完美等于上线前两项之和，<strong style="color:#16a34a">零用户流失</strong>。
             同时，"网络一键修复工具"作为内置网络工具功能的<strong>外置入口</strong>，通过缩短路径为用户提供了更便捷的使用方式。
-            当前外置入口覆盖率为内置的 15.7%，端到端转化率为 37.3%，<strong>仍有较大优化空间</strong>——
-            通过场景化触发扩大曝光、优化加速拦截和完成页引导提升转化，预计可将外置入口的有效修复率从 37% 提升至 50%+。
+            当前外置入口覆盖率为内置的 15.7%，<strong>仍有较大提升空间</strong>——
+            用户目前仍习惯通过旧的设置页路径使用网络工具，可通过在原页面增加引导，让用户了解一键修复工具已能承载同样的功能，从而缩短路径、提升体验。
         </p>
     </div>
 </div>
