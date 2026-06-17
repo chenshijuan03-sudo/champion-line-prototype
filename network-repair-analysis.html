@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络一键修复工具 · 数据分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+        .container { max-width: 1280px; margin: 0 auto; }
+        .page-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        .section {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(8px);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            padding-left: 12px;
+            border-left: 3px solid #60a5fa;
+        }
+        /* 指标卡片 */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .metric-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+        }
+        .metric-card.highlight::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+        .metric-card.success::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .metric-label { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+        .metric-value { font-size: 28px; font-weight: 700; color: #f1f5f9; }
+        .metric-sub { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .metric-change { font-size: 12px; margin-top: 6px; }
+        .metric-change.down { color: #f87171; }
+        .metric-change.up { color: #34d399; }
+        /* 数据表格 */
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .data-table th {
+            background: rgba(96, 165, 250, 0.15);
+            color: #93c5fd;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        }
+        .data-table th:first-child { border-radius: 8px 0 0 0; }
+        .data-table th:last-child { border-radius: 0 8px 0 0; }
+        .data-table td {
+            padding: 10px 14px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+            color: #cbd5e1;
+        }
+        .data-table tr:hover td { background: rgba(96, 165, 250, 0.05); }
+        .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .data-table .rate { color: #fbbf24; font-weight: 600; }
+        .data-table .rate.good { color: #34d399; }
+        .data-table .rate.bad { color: #f87171; }
+        /* 流程图 */
+        .flow-container { padding: 20px 0; }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .flow-node {
+            background: rgba(96, 165, 250, 0.12);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 10px;
+            padding: 14px 20px;
+            text-align: center;
+            min-width: 140px;
+        }
+        .flow-node.warn {
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+        .flow-node.danger {
+            background: rgba(248, 113, 113, 0.1);
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+        .flow-node.good {
+            background: rgba(52, 211, 153, 0.1);
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+        .flow-node .fn-label { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+        .flow-node .fn-value { font-size: 22px; font-weight: 700; color: #f1f5f9; }
+        .flow-node .fn-rate { font-size: 11px; color: #fbbf24; margin-top: 2px; }
+        .flow-arrow {
+            color: #475569;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .flow-branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        /* 图表容器 */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 768px) {
+            .chart-grid { grid-template-columns: 1fr; }
+            .flow-row { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+        .chart-box {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+        .chart-box h4 { font-size: 14px; color: #94a3b8; margin-bottom: 16px; text-align: center; }
+        .chart-wrap { position: relative; height: 280px; }
+        /* 建议卡片 */
+        .suggestion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .suggestion-card {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 3px solid;
+        }
+        .suggestion-card.p0 { border-left-color: #ef4444; }
+        .suggestion-card.p1 { border-left-color: #f59e0b; }
+        .suggestion-card.p2 { border-left-color: #60a5fa; }
+        .suggestion-card .sc-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .suggestion-card.p0 .sc-tag { background: rgba(239,68,68,0.2); color: #fca5a5; }
+        .suggestion-card.p1 .sc-tag { background: rgba(245,158,11,0.2); color: #fcd34d; }
+        .suggestion-card.p2 .sc-tag { background: rgba(96,165,250,0.2); color: #93c5fd; }
+        .suggestion-card .sc-title { font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 8px; }
+        .suggestion-card .sc-data { font-size: 12px; color: #fbbf24; margin-bottom: 8px; }
+        .suggestion-card .sc-desc { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+        .divider { height: 1px; background: rgba(148,163,184,0.1); margin: 24px 0; }
+        .note-box {
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 13px;
+            color: #fcd34d;
+            line-height: 1.6;
+            margin-top: 16px;
+        }
+        .tag-inline {
+            display: inline-block;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 3px;
+            background: rgba(96,165,250,0.15);
+            color: #93c5fd;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-title">网络一键修复工具 · 数据分析报告</div>
+    <div class="page-subtitle">数据区间：6月16日（全天） vs 6月17日（截止 10:00）| 指标口径：UV（独立用户数）</div>
+
+    <!-- 核心指标卡片 -->
+    <div class="section">
+        <div class="section-title">核心指标概览</div>
+        <div class="metric-grid">
+            <div class="metric-card">
+                <div class="metric-label">点击工具 UV</div>
+                <div class="metric-value">276</div>
+                <div class="metric-sub">6/17: 94</div>
+                <div class="metric-change down">↓ 65.9%（时间窗口差异）</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">到达工具弹窗 UV</div>
+                <div class="metric-value">208</div>
+                <div class="metric-sub">6/17: 72</div>
+                <div class="metric-change">转化率 75.4%</div>
+            </div>
+            <div class="metric-card success">
+                <div class="metric-label">修复完成 UV</div>
+                <div class="metric-value">178</div>
+                <div class="metric-sub">6/17: 56</div>
+                <div class="metric-change up">成功率 100%</div>
+            </div>
+            <div class="metric-card highlight">
+                <div class="metric-label">端到端转化率</div>
+                <div class="metric-value">64.5%</div>
+                <div class="metric-sub">6/17: 59.6%</div>
+                <div class="metric-change">点击工具→修复完成</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">加速回流率</div>
+                <div class="metric-value">61.1%</div>
+                <div class="metric-sub">6/17: 62.1%</div>
+                <div class="metric-change">关闭加速后回流</div>
+            </div>
+            <div class="metric-card highlight">
+                <div class="metric-label">重复修复用户</div>
+                <div class="metric-value">42</div>
+                <div class="metric-sub">6/17: 14</div>
+                <div class="metric-change">占修复完成 23.6%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 原始数据表格 -->
+    <div class="section">
+        <div class="section-title">原始数据</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>漏斗环节</th>
+                    <th class="num">6月16日 UV</th>
+                    <th class="num">6月17日 UV</th>
+                    <th class="num">日环比</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>点击工具</td><td class="num">276</td><td class="num">94</td><td class="num"><span class="rate bad">-65.9%</span></td></tr>
+                <tr><td>关闭加速提示弹窗曝光</td><td class="num">175</td><td class="num">58</td><td class="num"><span class="rate bad">-66.9%</span></td></tr>
+                <tr><td>工具弹窗曝光</td><td class="num">208</td><td class="num">72</td><td class="num"><span class="rate bad">-65.4%</span></td></tr>
+                <tr><td>点击立即启动修复</td><td class="num">178</td><td class="num">57</td><td class="num"><span class="rate bad">-68.0%</span></td></tr>
+                <tr><td>修复执行完毕</td><td class="num">178</td><td class="num">56</td><td class="num"><span class="rate bad">-68.5%</span></td></tr>
+                <tr><td>完成页 · 稍后再说</td><td class="num">117</td><td class="num">35</td><td class="num"><span class="rate bad">-70.1%</span></td></tr>
+                <tr><td>完成页 · 立即重启</td><td class="num">103</td><td class="num">35</td><td class="num"><span class="rate bad">-66.0%</span></td></tr>
+            </tbody>
+        </table>
+        <div class="note-box">
+            <strong>说明：</strong>6/17 数据仅截止到上午 10:00（约10小时），6/16 为全天24小时数据，绝对值下降约 65-70% 属于时间窗口差异，非真实衰减。按小时均值看，6/16 ≈ 11.5 UV/h，6/17 ≈ 9.4 UV/h，上午为低谷时段，预计全天数据基本持平。
+        </div>
+    </div>
+
+    <!-- 用户路径 -->
+    <div class="section">
+        <div class="section-title">用户路径分层（6月16日）</div>
+        <div class="flow-container">
+            <div class="flow-row">
+                <div class="flow-node" style="min-width:180px">
+                    <div class="fn-label">点击工具</div>
+                    <div class="fn-value">276</div>
+                </div>
+            </div>
+            <div class="flow-row">
+                <div class="flow-arrow">↓</div>
+            </div>
+            <div class="flow-row" style="gap:40px">
+                <div class="flow-branch">
+                    <div class="flow-node warn">
+                        <div class="fn-label">加速状态 → 关闭加速提示</div>
+                        <div class="fn-value">175</div>
+                        <div class="fn-rate">63.4%</div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-row" style="gap:24px">
+                        <div class="flow-node danger" style="min-width:110px">
+                            <div class="fn-label">放弃离开</div>
+                            <div class="fn-value">68</div>
+                            <div class="fn-rate">38.9%</div>
+                        </div>
+                        <div class="flow-node" style="min-width:110px">
+                            <div class="fn-label">关闭加速→回流</div>
+                            <div class="fn-value">107</div>
+                            <div class="fn-rate">61.1%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flow-branch">
+                    <div class="flow-node good" style="min-width:160px">
+                        <div class="fn-label">非加速状态 → 工具弹窗</div>
+                        <div class="fn-value">208</div>
+                        <div class="fn-rate">含回流用户107人</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flow-row">
+                <div class="flow-arrow">↓</div>
+            </div>
+            <div class="flow-row">
+                <div class="flow-node" style="min-width:200px">
+                    <div class="fn-label">点击立即启动修复</div>
+                    <div class="fn-value">178</div>
+                    <div class="fn-rate">弹窗→修复 85.6%</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-node good" style="min-width:200px">
+                    <div class="fn-label">修复执行完毕</div>
+                    <div class="fn-value">178</div>
+                    <div class="fn-rate">成功率 100%</div>
+                </div>
+            </div>
+            <div class="flow-row">
+                <div class="flow-arrow">↓</div>
+            </div>
+            <div class="flow-row" style="gap:24px">
+                <div class="flow-node" style="min-width:130px">
+                    <div class="fn-label">仅点"稍后再说"</div>
+                    <div class="fn-value">75</div>
+                    <div class="fn-rate">42.1%</div>
+                </div>
+                <div class="flow-node" style="min-width:130px">
+                    <div class="fn-label">仅点"立即重启"</div>
+                    <div class="fn-value">61</div>
+                    <div class="fn-rate">34.3%</div>
+                </div>
+                <div class="flow-node warn" style="min-width:130px">
+                    <div class="fn-label">修复了2次</div>
+                    <div class="fn-value">42</div>
+                    <div class="fn-rate">23.6%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表区 -->
+    <div class="section">
+        <div class="section-title">可视化图表</div>
+        <div class="chart-grid">
+            <div class="chart-box">
+                <h4>漏斗转化率（6月16日）</h4>
+                <div class="chart-wrap"><canvas id="funnelChart"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <h4>用户分流占比（6月16日）</h4>
+                <div class="chart-wrap"><canvas id="splitChart"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <h4>完成页行为分布</h4>
+                <div class="chart-wrap"><canvas id="completionChart"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <h4>6/16 vs 6/17 转化率对比</h4>
+                <div class="chart-wrap"><canvas id="compareChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 漏斗转化详情 -->
+    <div class="section">
+        <div class="section-title">漏斗转化率明细</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>漏斗步骤</th>
+                    <th class="num">6月16日</th>
+                    <th class="num">转化率</th>
+                    <th class="num">6月17日</th>
+                    <th class="num">转化率</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>点击工具</td><td class="num">276</td><td class="num">—</td><td class="num">94</td><td class="num">—</td></tr>
+                <tr><td>→ 到达工具弹窗</td><td class="num">208</td><td class="num"><span class="rate">75.4%</span></td><td class="num">72</td><td class="num"><span class="rate">76.6%</span></td></tr>
+                <tr><td>→ 启动修复</td><td class="num">178</td><td class="num"><span class="rate">85.6%</span></td><td class="num">57</td><td class="num"><span class="rate">79.2%</span></td></tr>
+                <tr><td>→ 修复完成</td><td class="num">178</td><td class="num"><span class="rate good">100%</span></td><td class="num">56</td><td class="num"><span class="rate good">98.2%</span></td></tr>
+                <tr><td><strong>端到端（工具→修复完成）</strong></td><td class="num"><strong>178</strong></td><td class="num"><span class="rate">64.5%</span></td><td class="num"><strong>56</strong></td><td class="num"><span class="rate">59.6%</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 加速回流分析 -->
+    <div class="section">
+        <div class="section-title">加速回流分析</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>用户群体</th>
+                    <th class="num">6月16日</th>
+                    <th class="num">占比</th>
+                    <th class="num">6月17日</th>
+                    <th class="num">占比</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>纯加速放弃（仅见关闭弹窗）</td><td class="num">68</td><td class="num"><span class="rate bad">24.6%</span></td><td class="num">22</td><td class="num"><span class="rate bad">23.4%</span></td></tr>
+                <tr><td>加速→关闭→回流</td><td class="num">107</td><td class="num">38.8%</td><td class="num">36</td><td class="num">38.3%</td></tr>
+                <tr><td>纯非加速（直接见工具弹窗）</td><td class="num">101</td><td class="num">36.6%</td><td class="num">36</td><td class="num">38.3%</td></tr>
+                <tr><td><strong>合计</strong></td><td class="num"><strong>276</strong></td><td class="num">100%</td><td class="num"><strong>94</strong></td><td class="num">100%</td></tr>
+            </tbody>
+        </table>
+        <div class="note-box">
+            <strong>回流率：</strong>看到关闭加速弹窗的用户中，61.1%（6/16）和 62.1%（6/17）选择关闭加速后再次点击工具回流到修复流程。两天数据高度一致，说明用户面对加速提示的行为模式非常稳定。约 <strong>4 成加速用户看到提示后直接放弃</strong>。
+        </div>
+    </div>
+
+    <!-- 完成页分析 -->
+    <div class="section">
+        <div class="section-title">完成页行为分析</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>用户类型</th>
+                    <th class="num">6月16日</th>
+                    <th class="num">占比</th>
+                    <th class="num">6月17日</th>
+                    <th class="num">占比</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>仅修复1次，点"稍后再说"</td><td class="num">75</td><td class="num"><span class="rate bad">42.1%</span></td><td class="num">21</td><td class="num"><span class="rate bad">37.5%</span></td></tr>
+                <tr><td>仅修复1次，点"立即重启"</td><td class="num">61</td><td class="num"><span class="rate good">34.3%</span></td><td class="num">21</td><td class="num"><span class="rate good">37.5%</span></td></tr>
+                <tr><td>修复了2次（两次都经历）</td><td class="num">42</td><td class="num"><span class="rate">23.6%</span></td><td class="num">14</td><td class="num"><span class="rate">25.0%</span></td></tr>
+                <tr><td><strong>合计</strong></td><td class="num"><strong>178</strong></td><td class="num">100%</td><td class="num"><strong>56</strong></td><td class="num">100%</td></tr>
+            </tbody>
+        </table>
+        <div class="note-box">
+            <strong>关键发现：</strong>
+            <br>• 首次修复后直接重启率仅 <strong>34-38%</strong>，约 2/3 用户首次选择"稍后再说"
+            <br>• <strong>~24% 的用户执行了两次完整修复流程</strong>，产生额外时间和服务器成本
+            <br>• 两个按钮互斥（单次修复只会点其中一个），重复修复的用户会分别点不同的按钮
+        </div>
+    </div>
+
+    <!-- 流失全景图 -->
+    <div class="section">
+        <div class="section-title">流失全景图（6月16日 · 276人）</div>
+        <div class="chart-grid">
+            <div class="chart-box">
+                <h4>各环节流失人数</h4>
+                <div class="chart-wrap"><canvas id="lossChart"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <h4>最终状态分布</h4>
+                <div class="chart-wrap"><canvas id="finalChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 建议 -->
+    <div class="section">
+        <div class="section-title">优化建议</div>
+        <div class="suggestion-grid">
+            <div class="suggestion-card p0">
+                <span class="sc-tag">P0</span>
+                <div class="sc-title">完成页不重启导致修复未生效</div>
+                <div class="sc-data">75人仅点"稍后再说"（42.1%），部分修复需重启才生效</div>
+                <div class="sc-desc">
+                    • 将"立即重启"设为默认高亮按钮<br>
+                    • "稍后再说"增加二次确认："部分修复需重启生效，确定稍后吗？"<br>
+                    • 增加定时消息推送提醒未重启用户
+                </div>
+            </div>
+            <div class="suggestion-card p0">
+                <span class="sc-tag">P0</span>
+                <div class="sc-title">加速拦截导致大量用户无法触达修复</div>
+                <div class="sc-data">68人纯加速放弃（24.6%），占点击工具的近1/4</div>
+                <div class="sc-desc">
+                    • 在关闭加速弹窗中增加"关闭加速并一键修复"快捷入口<br>
+                    • 减少用户操作步骤，降低回流门槛
+                </div>
+            </div>
+            <div class="suggestion-card p1">
+                <span class="sc-tag">P1</span>
+                <div class="sc-title">重复修复造成资源浪费</div>
+                <div class="sc-data">42人执行了两遍完整修复（23.6%）</div>
+                <div class="sc-desc">
+                    • 优化首次完成页引导，提升首次即重启的比例<br>
+                    • 减少用户"先稍后再说→又回来重做一遍"的场景
+                </div>
+            </div>
+            <div class="suggestion-card p1">
+                <span class="sc-tag">P1</span>
+                <div class="sc-title">工具弹窗→启动修复有15-20%流失</div>
+                <div class="sc-data">30人看到弹窗未点击启动修复（14.4%）</div>
+                <div class="sc-desc">
+                    • 检查弹窗文案引导是否足够清晰<br>
+                    • 考虑增加自动倒计时启动机制
+                </div>
+            </div>
+            <div class="suggestion-card p2">
+                <span class="sc-tag">P2</span>
+                <div class="sc-title">回流操作路径过长</div>
+                <div class="sc-data">关闭加速→返回→再次点击，流失率39%</div>
+                <div class="sc-desc">
+                    • 简化回流流程，减少操作步骤<br>
+                    • 关闭加速后自动触发工具弹窗
+                </div>
+            </div>
+        </div>
+        <div class="note-box" style="margin-top:20px">
+            <strong>一句话总结：</strong>功能核心修复流程运转良好（100% 成功率），但<strong>加速拦截</strong>（损失 24.6%）和<strong>完成页不重启</strong>（损失 42.1%）是两个最大的效率瓶颈，优化这两处可显著提升功能整体有效性。
+        </div>
+    </div>
+</div>
+
+<script>
+// 通用配置
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(148,163,184,0.08)';
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif';
+
+// 1. 漏斗转化率
+new Chart(document.getElementById('funnelChart'), {
+    type: 'bar',
+    data: {
+        labels: ['点击工具', '到达弹窗', '启动修复', '修复完成'],
+        datasets: [{
+            label: 'UV',
+            data: [276, 208, 178, 178],
+            backgroundColor: ['rgba(96,165,250,0.7)', 'rgba(139,92,246,0.7)', 'rgba(52,211,153,0.7)', 'rgba(16,185,129,0.9)'],
+            borderRadius: 6,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    afterLabel: function(ctx) {
+                        const rates = ['100%', '75.4%', '85.6%', '100%'];
+                        return '转化率: ' + rates[ctx.dataIndex];
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { grid: { color: 'rgba(148,163,184,0.06)' }, beginAtZero: true },
+            y: { grid: { display: false } }
+        }
+    }
+});
+
+// 2. 用户分流
+new Chart(document.getElementById('splitChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['纯加速放弃 (68)', '加速→回流 (107)', '纯非加速 (101)'],
+        datasets: [{
+            data: [68, 107, 101],
+            backgroundColor: ['rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)', 'rgba(52,211,153,0.8)'],
+            borderWidth: 0,
+            hoverOffset: 8,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle' } }
+        }
+    }
+});
+
+// 3. 完成页行为
+new Chart(document.getElementById('completionChart'), {
+    type: 'bar',
+    data: {
+        labels: ['仅"稍后再说"', '仅"立即重启"', '修复了2次'],
+        datasets: [
+            {
+                label: '6月16日',
+                data: [75, 61, 42],
+                backgroundColor: 'rgba(96,165,250,0.7)',
+                borderRadius: 4,
+            },
+            {
+                label: '6月17日',
+                data: [21, 21, 14],
+                backgroundColor: 'rgba(167,139,250,0.7)',
+                borderRadius: 4,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } }
+        },
+        scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: 'rgba(148,163,184,0.06)' }, beginAtZero: true }
+        }
+    }
+});
+
+// 4. 转化率对比
+new Chart(document.getElementById('compareChart'), {
+    type: 'bar',
+    data: {
+        labels: ['工具→弹窗', '弹窗→修复', '修复完成率', '加速回流率'],
+        datasets: [
+            {
+                label: '6月16日',
+                data: [75.4, 85.6, 100, 61.1],
+                backgroundColor: 'rgba(96,165,250,0.7)',
+                borderRadius: 4,
+            },
+            {
+                label: '6月17日',
+                data: [76.6, 79.2, 98.2, 62.1],
+                backgroundColor: 'rgba(244,114,182,0.7)',
+                borderRadius: 4,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' } },
+            tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.raw + '%' } }
+        },
+        scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: 'rgba(148,163,184,0.06)' }, min: 50, max: 105, ticks: { callback: v => v + '%' } }
+        }
+    }
+});
+
+// 5. 流失瀑布图
+new Chart(document.getElementById('lossChart'), {
+    type: 'bar',
+    data: {
+        labels: ['加速放弃', '弹窗未修复', '首次仅稍后再说', '重复修复(额外成本)'],
+        datasets: [{
+            label: '流失/成本人数',
+            data: [68, 30, 75, 42],
+            backgroundColor: ['rgba(248,113,113,0.7)', 'rgba(251,146,60,0.7)', 'rgba(251,191,36,0.7)', 'rgba(148,163,184,0.5)'],
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    afterLabel: function(ctx) {
+                        const pcts = ['24.6%', '14.4%', '42.1%', '23.6%'];
+                        return '占修复完成: ' + pcts[ctx.dataIndex];
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: 'rgba(148,163,184,0.06)' }, beginAtZero: true }
+        }
+    }
+});
+
+// 6. 最终状态分布
+new Chart(document.getElementById('finalChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['仅点稍后再说 · 75人 (42.1%)', '仅点立即重启 · 61人 (34.3%)', '修复2次 · 42人 (23.6%)'],
+        datasets: [{
+            data: [75, 61, 42],
+            backgroundColor: ['rgba(248,113,113,0.8)', 'rgba(52,211,153,0.8)', 'rgba(251,191,36,0.8)'],
+            borderWidth: 0,
+            hoverOffset: 8,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle' } }
+        }
+    }
+});
+</script>
+</body>
+</html>
