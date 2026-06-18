@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络一键修复工具 · 数据分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: #f8f9fb; color: #1a1a2e; min-height: 100vh; padding: 32px 16px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .page-header { text-align: center; margin-bottom: 36px; }
+        .page-title { font-size: 28px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .page-sub { font-size: 13px; color: #8b8fa3; }
+        .banner { background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 16px; padding: 26px 30px; color: #fff; margin-bottom: 24px; }
+        .banner h2 { font-size: 15px; font-weight: 600; margin-bottom: 10px; opacity: 0.9; }
+        .banner p { font-size: 13px; line-height: 1.8; opacity: 0.95; }
+        .banner strong { color: #fde68a; }
+        .card { background: #fff; border: 1px solid #e8eaef; border-radius: 14px; padding: 26px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .card-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+        .card-title .icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .card-title .icon.red { background: #fef2f2; color: #ef4444; }
+        .card-title .icon.amber { background: #fffbeb; color: #f59e0b; }
+        .card-title .icon.blue { background: #eff6ff; color: #3b82f6; }
+        .card-title .icon.green { background: #f0fdf4; color: #22c55e; }
+        .card-title .icon.purple { background: #faf5ff; color: #a855f7; }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        .data-table th { background: #f1f3f7; color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; }
+        .data-table th:first-child { border-radius: 8px 0 0 8px; }
+        .data-table th:last-child { border-radius: 0 8px 8px 0; }
+        .data-table td { padding: 10px 14px; border-bottom: 1px solid #f1f3f7; color: #374151; }
+        .data-table tr:hover td { background: #f8f9fb; }
+        .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .data-table .rate { font-weight: 600; }
+        .data-table .rate.good { color: #16a34a; }
+        .data-table .rate.warn { color: #d97706; }
+        .data-table .rate.bad { color: #dc2626; }
+        .note { font-size: 12px; color: #64748b; background: #f8f9fb; border-radius: 8px; padding: 12px 16px; line-height: 1.7; margin-top: 14px; }
+        .note strong { color: #374151; }
+        .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px; }
+        @media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } }
+        .chart-box { background: #f8f9fb; border-radius: 10px; padding: 16px; }
+        .chart-box h4 { font-size: 12px; color: #8b8fa3; margin-bottom: 12px; text-align: center; font-weight: 500; }
+        .chart-wrap { position: relative; height: 240px; }
+        .flow-simple { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; padding: 14px 0; }
+        .flow-step { text-align: center; padding: 10px 14px; min-width: 90px; }
+        .flow-step .fs-label { font-size: 11px; color: #8b8fa3; margin-bottom: 3px; }
+        .flow-step .fs-value { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+        .flow-step .fs-rate { font-size: 11px; color: #4f46e5; font-weight: 600; margin-top: 2px; }
+        .flow-connector { font-size: 18px; color: #cbd5e1; padding: 0 4px; flex-shrink: 0; }
+        .flow-divider { width: 100%; display: flex; align-items: center; justify-content: center; padding: 6px 0; }
+        .flow-divider .arrow-down { font-size: 18px; color: #cbd5e1; }
+        .flow-split { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
+        .flow-branch { display: flex; flex-direction: column; align-items: center; }
+        .flow-box { border: 1.5px solid #e8eaef; border-radius: 10px; padding: 12px 16px; text-align: center; background: #fff; min-width: 110px; }
+        .flow-box.red { border-color: #fecaca; background: #fef8f8; }
+        .flow-box.green { border-color: #bbf7d0; background: #f7fef9; }
+        .flow-box.amber { border-color: #fde68a; background: #fffdf5; }
+        .flow-box .fb-label { font-size: 11px; color: #8b8fa3; }
+        .flow-box .fb-value { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-top: 2px; }
+        .flow-box .fb-sub { font-size: 11px; color: #8b8fa3; }
+        .opt-card { border-left: 4px solid; padding: 22px 26px; }
+        .opt-card.critical { border-left-color: #ef4444; }
+        .opt-card.warning { border-left-color: #f59e0b; }
+        .opt-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .opt-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+        .opt-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; }
+        .opt-tag.critical { background: #fef2f2; color: #dc2626; }
+        .opt-tag.warning { background: #fffbeb; color: #d97706; }
+        .opt-body { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        @media (max-width: 768px) { .opt-body { grid-template-columns: 1fr; } }
+        .opt-data { background: #f8f9fb; border-radius: 10px; padding: 14px; }
+        .opt-data h5 { font-size: 12px; color: #8b8fa3; margin-bottom: 8px; font-weight: 500; }
+        .opt-metric { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
+        .opt-metric .big { font-size: 26px; font-weight: 700; color: #1a1a2e; }
+        .opt-metric .label { font-size: 12px; color: #8b8fa3; }
+        .opt-metric .big.red { color: #ef4444; }
+        .opt-metric .big.green { color: #22c55e; }
+        .opt-metric .big.amber { color: #f59e0b; }
+        .opt-insight { background: #f8f9fb; border-radius: 10px; padding: 14px; }
+        .opt-insight h5 { font-size: 12px; color: #8b8fa3; margin-bottom: 8px; font-weight: 500; }
+        .opt-insight ul { list-style: none; padding: 0; }
+        .opt-insight li { font-size: 13px; color: #374151; line-height: 1.7; padding: 3px 0; padding-left: 16px; position: relative; }
+        .opt-insight li::before { content: '→'; position: absolute; left: 0; color: #8b8fa3; }
+        .opt-insight .action { margin-top: 10px; padding-top: 10px; border-top: 1px solid #e8eaef; }
+        .opt-insight .action-title { font-size: 12px; font-weight: 600; color: #4f46e5; margin-bottom: 6px; }
+        .opt-insight .action li { color: #4f46e5; }
+        .opt-insight .action li::before { content: '✓'; color: #4f46e5; }
+        .spacer { height: 6px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="page-header">
+        <div class="page-title">网络一键修复工具 · 数据分析报告</div>
+        <div class="page-sub">数据区间：6月16日全天 vs 6月17日截止10:00 | 口径：UV（独立用户数）</div>
+    </div>
+    <div class="banner">
+        <h2>核心结论</h2>
+        <p>修复流程本身运转良好（成功率 100%），但整体有效性受两大瓶颈制约：<br>
+        <strong>① 加速拦截</strong> — 63% 的用户处于加速状态，其中 39% 直接放弃，约 1/4 的点击工具用户完全无法触达修复功能；<br>
+        <strong>② 修复后不重启</strong> — 首次修复完成后 66% 的用户选择"稍后再说"，部分修复需重启才生效，导致修复实际未生效的用户占比高达 42%。</p>
+    </div>
+    <!-- 原始数据 -->
+    <div class="card">
+        <div class="card-title"><span class="icon blue">📋</span> 原始数据明细</div>
+        <table class="data-table">
+            <thead><tr><th>漏斗环节</th><th class="num">6月16日</th><th class="num">6月17日(截止10:00)</th><th class="num">日环比</th><th class="num">按小时均值</th></tr></thead>
+            <tbody>
+                <tr><td>点击工具</td><td class="num">276</td><td class="num">94</td><td class="num rate bad">-65.9%</td><td class="num">11.5 vs 9.4/h</td></tr>
+                <tr><td>关闭加速提示弹窗曝光</td><td class="num">175</td><td class="num">58</td><td class="num rate bad">-66.9%</td><td class="num">7.3 vs 5.8/h</td></tr>
+                <tr><td>工具弹窗曝光</td><td class="num">208</td><td class="num">72</td><td class="num rate bad">-65.4%</td><td class="num">8.7 vs 7.2/h</td></tr>
+                <tr><td>点击立即启动修复</td><td class="num">178</td><td class="num">57</td><td class="num rate bad">-68.0%</td><td class="num">7.4 vs 5.7/h</td></tr>
+                <tr><td>修复执行完毕</td><td class="num">178</td><td class="num">56</td><td class="num rate bad">-68.5%</td><td class="num">7.4 vs 5.6/h</td></tr>
+                <tr><td>完成页 · 稍后再说</td><td class="num">117</td><td class="num">35</td><td class="num rate bad">-70.1%</td><td class="num">4.9 vs 3.5/h</td></tr>
+                <tr><td>完成页 · 立即重启</td><td class="num">103</td><td class="num">35</td><td class="num rate bad">-66.0%</td><td class="num">4.3 vs 3.5/h</td></tr>
+            </tbody>
+        </table>
+        <div class="note"><strong>时间窗口说明：</strong>6/17 仅采集到上午 10:00（约10小时），绝对值下降 65-70% 属正常时间窗口差异。按小时均值看，上午为低谷时段（9.4/h vs 全天均值 11.5/h），预计 6/17 全天数据与 6/16 基本持平。两天各项转化率高度一致（差异 &lt;5%），数据稳定可信。</div>
+        <div class="chart-row">
+            <div class="chart-box"><h4>关键转化率 · 6/16 vs 6/17</h4><div class="chart-wrap"><canvas id="compareChart"></canvas></div></div>
+            <div class="chart-box"><h4>完成页行为分布 · 6/16 vs 6/17</h4><div class="chart-wrap"><canvas id="completionChart"></canvas></div></div>
+        </div>
+    </div>
+    <!-- 漏斗 -->
+    <div class="card">
+        <div class="card-title"><span class="icon green">⬇</span> 端到端漏斗全景（6月16日）</div>
+        <div class="flow-simple">
+            <div class="flow-step"><div class="fs-label">点击工具</div><div class="fs-value">276</div></div>
+            <div class="flow-connector">→</div>
+            <div class="flow-step"><div class="fs-label">到达工具弹窗</div><div class="fs-value">208</div><div class="fs-rate">75.4%</div></div>
+            <div class="flow-connector">→</div>
+            <div class="flow-step"><div class="fs-label">启动修复</div><div class="fs-value">178</div><div class="fs-rate">85.6%</div></div>
+            <div class="flow-connector">→</div>
+            <div class="flow-step"><div class="fs-label">修复完成</div><div class="fs-value">178</div><div class="fs-rate">100%</div></div>
+        </div>
+        <div class="flow-divider"><span class="arrow-down">↓</span></div>
+        <div class="flow-split">
+            <div class="flow-branch"><div class="flow-box red"><div class="fb-label">仅"稍后再说"</div><div class="fb-value">75</div><div class="fb-sub">42.1% · 未重启</div></div></div>
+            <div class="flow-branch"><div class="flow-box green"><div class="fb-label">仅"立即重启"</div><div class="fb-value">61</div><div class="fb-sub">34.3% · 已重启</div></div></div>
+            <div class="flow-branch"><div class="flow-box amber"><div class="fb-label">修复了2次</div><div class="fb-value">42</div><div class="fb-sub">23.6% · 额外成本</div></div></div>
+        </div>
+    </div>
+    <!-- 分流 -->
+    <div class="card">
+        <div class="card-title"><span class="icon purple">⇄</span> 用户分流机制（6月16日）</div>
+        <div class="flow-split" style="margin-bottom:14px">
+            <div class="flow-branch">
+                <div class="flow-box amber"><div class="fb-label">加速状态用户</div><div class="fb-value">175</div><div class="fb-sub">63.4%</div></div>
+                <div class="flow-divider"><span class="arrow-down">↓</span></div>
+                <div style="display:flex;gap:14px">
+                    <div class="flow-box red" style="min-width:85px"><div class="fb-label">放弃</div><div class="fb-value">68</div><div class="fb-sub">38.9%</div></div>
+                    <div class="flow-box green" style="min-width:85px"><div class="fb-label">回流</div><div class="fb-value">107</div><div class="fb-sub">61.1%</div></div>
+                </div>
+            </div>
+            <div class="flow-branch">
+                <div class="flow-box green"><div class="fb-label">非加速状态用户</div><div class="fb-value">101</div><div class="fb-sub">36.6%</div></div>
+                <div class="flow-divider"><span class="arrow-down">↓</span></div>
+                <div class="flow-box" style="min-width:110px"><div class="fb-label">直接看到工具弹窗</div><div class="fb-value">101</div></div>
+            </div>
+        </div>
+        <div class="note"><strong>计算方式：</strong>加速用户(G=175) + 非加速用户 = 点击工具(F=276)，非加速用户 = 276-175 = 101 人。回流用户(107人)关闭加速后再次点击工具，汇入工具弹窗路径(H=208)，因此工具弹窗 UV = 非加速101 + 回流107 = 208。</div>
+        <div class="chart-row">
+            <div class="chart-box"><h4>用户分流占比</h4><div class="chart-wrap"><canvas id="splitChart"></canvas></div></div>
+            <div class="chart-box"><h4>各环节流失人数</h4><div class="chart-wrap"><canvas id="lossChart"></canvas></div></div>
+        </div>
+    </div>
+    <!-- 优化1 -->
+    <div class="card opt-card critical">
+        <div class="opt-header">
+            <div class="opt-title">优化方向一：加速拦截 — 63% 用户被拦截，39% 直接放弃</div>
+            <span class="opt-tag critical">P0 · 影响面最大</span>
+        </div>
+        <div class="opt-body">
+            <div class="opt-data">
+                <h5>数据支撑</h5>
+                <div class="opt-metric"><span class="big red">175</span><span class="label">人处于加速状态（63.4%）</span></div>
+                <div class="opt-metric"><span class="big red">68</span><span class="label">人看到关闭提示后直接放弃（38.9%）</span></div>
+                <div class="opt-metric"><span class="big amber">107</span><span class="label">人关闭加速后回流（61.1%）</span></div>
+                <div class="spacer"></div>
+                <div style="font-size:12px;color:#64748b;line-height:1.6;">当前回流路径需 3 步：关闭弹窗 → 手动关闭加速 → 返回再次点击工具<br>两天放弃率稳定在 38-39%，非偶然波动，而是固定行为模式</div>
+            </div>
+            <div class="opt-insight">
+                <h5>分析</h5>
+                <ul>
+                    <li>63% 的用户点击工具时处于加速状态，工具入口对这部分用户<strong>几乎不可用</strong></li>
+                    <li>虽然 61% 愿意关闭加速后回来，但操作路径过长（3步），每步都有流失</li>
+                    <li>放弃率和回流率两天高度一致，说明是<strong>结构性问题</strong>而非策略波动</li>
+                </ul>
+                <div class="action"><div class="action-title">建议行动</div><ul><li>在关闭加速弹窗中增加「关闭加速并修复」一键操作，合并两步为一步</li></ul></div>
+            </div>
+        </div>
+    </div>
+    <!-- 优化2 -->
+    <div class="card opt-card critical">
+        <div class="opt-header">
+            <div class="opt-title">优化方向二：修复后 42% 用户未重启，修复可能未生效</div>
+            <span class="opt-tag critical">P0 · 功能有效性</span>
+        </div>
+        <div class="opt-body">
+            <div class="opt-data">
+                <h5>完成页行为拆分（178人）</h5>
+                <div class="opt-metric"><span class="big red">75</span><span class="label">人仅点"稍后再说"，未重启（42.1%）</span></div>
+                <div class="opt-metric"><span class="big green">61</span><span class="label">人仅点"立即重启"（34.3%）</span></div>
+                <div class="opt-metric"><span class="big amber">42</span><span class="label">人修复了 2 次（23.6%）</span></div>
+                <div class="spacer"></div>
+                <div class="opt-metric"><span class="big">34.3%</span><span class="label">首次修复后直接重启率</span></div>
+                <div class="opt-metric"><span class="big">65.7%</span><span class="label">首次修复后选择"稍后再说"</span></div>
+            </div>
+            <div class="opt-insight">
+                <h5>分析</h5>
+                <ul>
+                    <li>首次修复后 <strong>2/3 的用户不会立即重启</strong>，而部分修复必须重启才生效——大量用户的修复实际"白做了"</li>
+                    <li>42 人（24%）执行了两遍完整修复：先点"稍后再说"或"立即重启"，后来又做了一遍——说明用户离开后仍惦记修复效果，但不得不重走流程</li>
+                    <li>重复修复带来双倍时间和服务器资源消耗，两天数据一致（6/17 同样 25%），是稳定行为模式</li>
+                </ul>
+                <div class="action"><div class="action-title">建议行动</div><ul><li>点击"稍后再说"时增加二次确认提示："部分修复需重启生效，确定稍后吗？"</li></ul></div>
+            </div>
+        </div>
+    </div>
+    <!-- 优化3 -->
+    <div class="card opt-card warning">
+        <div class="opt-header">
+            <div class="opt-title">优化方向三：工具弹窗 → 启动修复有 15-20% 流失</div>
+            <span class="opt-tag warning">P1 · 流程内最大流失</span>
+        </div>
+        <div class="opt-body">
+            <div class="opt-data">
+                <h5>数据支撑</h5>
+                <div class="opt-metric"><span class="big amber">30</span><span class="label">人看到弹窗未点修复（14.4%）</span></div>
+                <div class="opt-metric"><span class="big">178</span><span class="label">/ 208 人点击了启动修复（85.6%）</span></div>
+                <div class="spacer"></div>
+                <div class="opt-metric"><span class="big">15</span><span class="label">→ 6/17 流失 15 人（20.8%）</span></div>
+            </div>
+            <div class="opt-insight">
+                <h5>分析</h5>
+                <ul>
+                    <li>用户已主动走到工具弹窗，说明修复意愿较强，但仍有约 1/6 的人没有继续</li>
+                    <li>可能原因：弹窗文案不够清晰、用户对修复效果存疑、按钮引导不够醒目</li>
+                </ul>
+                <div class="action"><div class="action-title">建议行动</div><ul><li>检查弹窗文案是否明确传达"修复能解决什么问题"</li></ul></div>
+            </div>
+        </div>
+    </div>
+    <!-- 总结 -->
+    <div class="card" style="background:linear-gradient(135deg,#f8f9fb,#eef2ff);border-color:#c7d2fe">
+        <div class="card-title"><span class="icon purple">💡</span> 一句话总结</div>
+        <p style="font-size:13px;line-height:1.8;color:#374151">
+            功能核心修复流程运转良好（100% 成功率），端到端转化率 64.5%。但<strong style="color:#dc2626">加速拦截</strong>（损失 24.6% 用户）和<strong style="color:#dc2626">完成页不重启</strong>（42.1% 用户修复未生效）是两个最大瓶颈。通过「关闭加速并修复」一键操作 + "稍后再说"二次确认提示，预计可将端到端有效修复率从当前的 <strong>~37%</strong>（点击工具→最终重启）提升至 <strong>50%+</strong>。
+        </p>
+    </div>
+</div>
+<script>
+Chart.defaults.color = '#64748b'; Chart.defaults.borderColor = 'rgba(0,0,0,0.05)';
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif';
+Chart.defaults.font.size = 11;
+new Chart(document.getElementById('compareChart'), { type:'bar', data:{ labels:['工具→弹窗','弹窗→修复','修复完成率','加速回流率'], datasets:[{label:'6月16日',data:[75.4,85.6,100,61.1],backgroundColor:'rgba(79,70,229,0.75)',borderRadius:5},{label:'6月17日',data:[76.6,79.2,98.2,62.1],backgroundColor:'rgba(168,85,247,0.55)',borderRadius:5}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,pointStyle:'circle',padding:12}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+'%'}}},scales:{x:{grid:{display:false}},y:{min:50,max:105,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.04)'}}}} });
+new Chart(document.getElementById('completionChart'), { type:'bar', data:{ labels:['仅"稍后再说"','仅"立即重启"','修复了2次'], datasets:[{label:'6月16日',data:[75,61,42],backgroundColor:'rgba(79,70,229,0.75)',borderRadius:5},{label:'6月17日',data:[21,21,14],backgroundColor:'rgba(168,85,247,0.55)',borderRadius:5}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,pointStyle:'circle',padding:12}}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.04)'},beginAtZero:true}}} });
+new Chart(document.getElementById('splitChart'), { type:'doughnut', data:{ labels:['纯加速放弃 68人 (24.6%)','加速→回流 107人 (38.8%)','纯非加速 101人 (36.6%)'], datasets:[{data:[68,107,101],backgroundColor:['rgba(239,68,68,0.75)','rgba(245,158,11,0.75)','rgba(34,197,94,0.75)'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]}, options:{responsive:true,maintainAspectRatio:false,cutout:'52%',plugins:{legend:{position:'bottom',labels:{padding:14,usePointStyle:true,pointStyle:'circle'}}}} });
+new Chart(document.getElementById('lossChart'), { type:'bar', data:{ labels:['加速放弃 68人','弹窗未修复 30人','首次仅稍后再说 75人','重复修复 42人'], datasets:[{data:[68,30,75,42],backgroundColor:['rgba(239,68,68,0.7)','rgba(245,158,11,0.7)','rgba(239,68,68,0.5)','rgba(148,163,184,0.5)'],borderRadius:5}]}, options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:function(ctx){return ['占点击工具 24.6%','占弹窗用户 14.4%','占修复完成 42.1%','占修复完成 23.6%'][ctx.dataIndex];}}}},scales:{y:{grid:{display:false}},x:{grid:{color:'rgba(0,0,0,0.04)'},beginAtZero:true}}} });
+</script>
+</body>
+</html>

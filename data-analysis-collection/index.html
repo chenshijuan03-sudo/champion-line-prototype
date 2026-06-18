@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析合集</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f6fa; color: #1a1a2e;
+            min-height: 100vh;
+        }
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+            padding: 48px 24px 40px;
+            text-align: center;
+            position: relative;
+        }
+        .header h1 {
+            font-size: 32px; font-weight: 800; color: #fff;
+            margin-bottom: 8px; letter-spacing: 1px;
+        }
+        .header p { font-size: 14px; color: rgba(255,255,255,0.8); }
+        /* 搜索区 */
+        .search-area {
+            max-width: 680px; margin: -28px auto 0; padding: 0 16px;
+            position: relative; z-index: 10;
+        }
+        .search-box {
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 6px 6px 6px 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .search-box input {
+            flex: 1; border: none; outline: none;
+            font-size: 15px; color: #1a1a2e;
+            padding: 12px 0;
+            font-family: inherit;
+        }
+        .search-box input::placeholder { color: #a0a3bd; }
+        .search-icon {
+            width: 20px; height: 20px; flex-shrink: 0;
+            color: #a0a3bd;
+        }
+        .search-clear {
+            width: 36px; height: 36px; border-radius: 10px;
+            border: none; background: #f1f3f7; color: #64748b;
+            cursor: pointer; font-size: 16px;
+            display: none; align-items: center; justify-content: center;
+        }
+        .search-clear.show { display: flex; }
+        /* 内容区 */
+        .content { max-width: 900px; margin: 0 auto; padding: 32px 16px 60px; }
+        .section-label {
+            font-size: 13px; font-weight: 600; color: #8b8fa3;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+        .results-info {
+            font-size: 13px; color: #8b8fa3; margin-bottom: 16px;
+        }
+        .results-info strong { color: #4f46e5; }
+        /* 卡片 */
+        .card-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .card {
+            background: #fff; border: 1px solid #e8eaef;
+            border-radius: 14px; padding: 24px 28px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: box-shadow 0.2s, transform 0.2s;
+            cursor: default;
+        }
+        .card:hover { box-shadow: 0 4px 16px rgba(79,70,229,0.1); transform: translateY(-2px); }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+        .card-title { font-size: 16px; font-weight: 700; color: #1a1a2e; line-height: 1.4; }
+        .card-tag {
+            font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 20px;
+            flex-shrink: 0; white-space: nowrap;
+        }
+        .card-tag.purple { background: #f3f0ff; color: #7c3aed; }
+        .card-tag.blue { background: #eff6ff; color: #2563eb; }
+        .card-tag.green { background: #f0fdf4; color: #16a34a; }
+        .card-desc {
+            font-size: 13px; color: #64748b; line-height: 1.7;
+            margin-bottom: 14px;
+        }
+        .card-keywords {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-bottom: 16px;
+        }
+        .keyword {
+            font-size: 11px; padding: 3px 10px;
+            background: #f1f3f7; color: #64748b;
+            border-radius: 6px;
+        }
+        .keyword.match { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+        .card-bottom { display: flex; justify-content: space-between; align-items: center; }
+        .card-meta { font-size: 11px; color: #a0a3bd; }
+        .card-btn {
+            padding: 8px 20px; border-radius: 10px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff; font-size: 13px; font-weight: 600;
+            border: none; cursor: pointer;
+            transition: opacity 0.2s;
+            text-decoration: none;
+        }
+        .card-btn:hover { opacity: 0.9; }
+        /* 空状态 */
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+            color: #a0a3bd;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+        /* 查看器覆盖层 */
+        .viewer-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+        .viewer-overlay.show { display: flex; }
+        .viewer-bar {
+            background: #fff; padding: 10px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        .viewer-title { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+        .viewer-actions { display: flex; gap: 8px; }
+        .viewer-btn {
+            padding: 6px 14px; border-radius: 8px;
+            font-size: 12px; font-weight: 500;
+            border: 1px solid #e8eaef; background: #fff;
+            color: #374151; cursor: pointer;
+            transition: background 0.15s;
+            text-decoration: none;
+        }
+        .viewer-btn:hover { background: #f8f9fb; }
+        .viewer-btn.close {
+            background: #ef4444; color: #fff; border-color: #ef4444;
+        }
+        .viewer-btn.close:hover { background: #dc2626; }
+        .viewer-frame {
+            flex: 1; border: none; width: 100%; background: #f5f6fa;
+        }
+        /* 响应式 */
+        @media (min-width: 768px) {
+            .card-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 数据分析合集</h1>
+        <p>搜索关键词快速定位分析报告</p>
+    </div>
+
+    <div class="search-area">
+        <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="搜索：修复、加速、渗透率、优化工具..." autocomplete="off">
+            <button class="search-clear" id="clearBtn" onclick="clearSearch()">✕</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="results-info" id="resultsInfo"></div>
+        <div class="card-grid" id="cardGrid"></div>
+        <div class="empty-state hidden" id="emptyState">
+            <div class="icon">🔍</div>
+            <p>未找到匹配的分析报告<br>试试其他关键词</p>
+        </div>
+    </div>
+
+    <!-- 查看器 -->
+    <div class="viewer-overlay" id="viewerOverlay">
+        <div class="viewer-bar">
+            <span class="viewer-title" id="viewerTitle">查看分析报告</span>
+            <div class="viewer-actions">
+                <a class="viewer-btn" id="viewerOpenBtn" href="#" target="_blank">新窗口打开</a>
+                <button class="viewer-btn close" onclick="closeViewer()">关闭 ✕</button>
+            </div>
+        </div>
+        <iframe class="viewer-frame" id="viewerFrame" src="about:blank"></iframe>
+    </div>
+
+    <script>
+    // 分析数据
+    const analyses = [
+        {
+            id: 'network-repair',
+            title: '网络一键修复工具 · 数据分析报告',
+            desc: '网络一键修复工具的完整漏斗分析，包括用户路径分层（加速/非加速状态）、回流率分析、完成页行为拆分、重复修复用户识别，以及三个核心优化方向建议。',
+            keywords: ['网络修复', '一键修复', '加速状态', '关闭加速', '工具弹窗', '立即重启', '稍后再说', '修复完成', '漏斗', '转化率', '回流', '重复修复', '重启'],
+            file: 'network-repair-analysis.html',
+            tag: '功能分析',
+            tagClass: 'purple',
+            date: '2026-06-17'
+        },
+        {
+            id: 'opt-tool',
+            title: '优化工具Tab渗透率 · 合并前后对比分析',
+            desc: '将"网络工具"和"商店优化"合并为"优化工具"Tab后的渗透率分析，对比上线前基线数据（商店优化34% + 网络工具36%）与合并后数据（70%），验证入口整合效果，并分析内置功能外置（一键修复工具）的用户路径变化。',
+            keywords: ['优化工具', '渗透率', '合并', '商店优化', '网络工具', '设置页', '点击率', '入口整合', '外置', '内置功能', 'Tab', '基线数据', '功能合并'],
+            file: 'opt-tool-penetration-analysis.html',
+            tag: '策略分析',
+            tagClass: 'blue',
+            date: '2026-06-17'
+        }
+    ];
+
+    const cardGrid = document.getElementById('cardGrid');
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultsInfo = document.getElementById('resultsInfo');
+    const emptyState = document.getElementById('emptyState');
+
+    function renderCards(query = '') {
+        const q = query.trim().toLowerCase();
+        cardGrid.innerHTML = '';
+
+        let filtered = analyses;
+        if (q) {
+            filtered = analyses.filter(a => {
+                const searchText = (a.title + ' ' + a.desc + ' ' + a.keywords.join(' ')).toLowerCase();
+                return q.split(/\s+/).every(word => searchText.includes(word));
+            });
+        }
+
+        // 结果信息
+        if (q) {
+            if (filtered.length > 0) {
+                resultsInfo.innerHTML = `搜索 "<strong>${escapeHtml(query.trim())}</strong>" 找到 ${filtered.length} 份报告`;
+            } else {
+                resultsInfo.innerHTML = `搜索 "<strong>${escapeHtml(query.trim())}</strong>" 未找到匹配报告`;
+            }
+        } else {
+            resultsInfo.innerHTML = `共 ${analyses.length} 份分析报告`;
+        }
+
+        emptyState.classList.toggle('hidden', filtered.length > 0);
+
+        filtered.forEach(a => {
+            const matchedKeywords = q
+                ? a.keywords.filter(k => k.toLowerCase().includes(q) || q.split(/\s+/).some(w => k.toLowerCase().includes(w)))
+                : [];
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-top">
+                    <div class="card-title">${a.title}</div>
+                    <span class="card-tag ${a.tagClass}">${a.tag}</span>
+                </div>
+                <div class="card-desc">${highlightText(a.desc, q)}</div>
+                <div class="card-keywords">
+                    ${a.keywords.map(k => {
+                        const isMatch = matchedKeywords.includes(k);
+                        return `<span class="keyword${isMatch ? ' match' : ''}">${k}</span>`;
+                    }).join('')}
+                </div>
+                <div class="card-bottom">
+                    <span class="card-meta">${a.date}</span>
+                    <button class="card-btn" onclick="openViewer('${a.id}')">去查看 →</button>
+                </div>
+            `;
+            cardGrid.appendChild(card);
+        });
+    }
+
+    function highlightText(text, query) {
+        if (!query) return text;
+        const words = query.split(/\s+/).filter(w => w.length > 0);
+        let result = text;
+        words.forEach(w => {
+            const regex = new RegExp(`(${escapeRegex(w)})`, 'gi');
+            result = result.replace(regex, '<mark style="background:#eef2ff;color:#4f46e5;padding:0 2px;border-radius:3px">$1</mark>');
+        });
+        return result;
+    }
+
+    function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    function clearSearch() {
+        searchInput.value = '';
+        clearBtn.classList.remove('show');
+        renderCards();
+    }
+
+    searchInput.addEventListener('input', () => {
+        clearBtn.classList.toggle('show', searchInput.value.length > 0);
+        renderCards(searchInput.value);
+    });
+
+    // 查看器
+    function openViewer(id) {
+        const a = analyses.find(x => x.id === id);
+        if (!a) return;
+        document.getElementById('viewerTitle').textContent = a.title;
+        document.getElementById('viewerFrame').src = a.file;
+        document.getElementById('viewerOpenBtn').href = a.file;
+        document.getElementById('viewerOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeViewer() {
+        document.getElementById('viewerOverlay').classList.remove('show');
+        document.getElementById('viewerFrame').src = 'about:blank';
+        document.body.style.overflow = '';
+    }
+
+    // ESC 关闭查看器
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeViewer();
+    });
+
+    // 初始渲染
+    renderCards();
+    </script>
+</body>
+</html>
