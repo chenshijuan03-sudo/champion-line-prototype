@@ -166,7 +166,7 @@
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-            <input type="text" id="searchInput" placeholder="搜索：修复、加速、渗透率、优化工具..." autocomplete="off">
+            <input type="text" id="searchInput" placeholder="搜索标题：网络修复、优化工具、渗透率..." autocomplete="off">
             <button class="search-clear" id="clearBtn" onclick="clearSearch()">✕</button>
         </div>
     </div>
@@ -230,7 +230,7 @@
         let filtered = analyses;
         if (q) {
             filtered = analyses.filter(a => {
-                const searchText = (a.title + ' ' + a.desc + ' ' + a.keywords.join(' ')).toLowerCase();
+                const searchText = a.title.toLowerCase();
                 return q.split(/\s+/).every(word => searchText.includes(word));
             });
         }
